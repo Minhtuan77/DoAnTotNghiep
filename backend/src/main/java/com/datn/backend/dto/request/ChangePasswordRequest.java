@@ -1,0 +1,26 @@
+package com.datn.backend.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class ChangePasswordRequest {
+
+    @NotBlank(message = "Vui lòng nhập mật khẩu hiện tại")
+    private String currentPassword;
+
+    @NotBlank(message = "Vui lòng nhập mật khẩu mới")
+    @Size(
+            min = 6,
+            max = 100,
+            message = "Mật khẩu phải từ 6 ký tự trở lên"
+    )
+    private String newPassword;
+}
