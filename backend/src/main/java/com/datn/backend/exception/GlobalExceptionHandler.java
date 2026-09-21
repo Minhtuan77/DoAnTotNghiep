@@ -20,8 +20,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({
             EmailAlreadyExistsException.class,
-            PhoneAlreadyExistsException.class,
-            PermissionCodeAlreadyExistsException.class
+            PhoneAlreadyExistsException.class
     })
     public ResponseEntity<ApiErrorResponse> handleConflict(
             RuntimeException ex,
@@ -29,48 +28,6 @@ public class GlobalExceptionHandler {
     ) {
         return build(
                 HttpStatus.CONFLICT,
-                ex.getMessage(),
-                req,
-                null
-        );
-    }
-
-    @ExceptionHandler({
-            RoleNotFoundException.class,
-            PermissionNotFoundException.class
-    })
-    public ResponseEntity<ApiErrorResponse> handleAdminResourceNotFound(
-            RuntimeException ex,
-            HttpServletRequest req
-    ) {
-        return build(
-                HttpStatus.NOT_FOUND,
-                ex.getMessage(),
-                req,
-                null
-        );
-    }
-
-    @ExceptionHandler(InvalidRoleAssignmentException.class)
-    public ResponseEntity<ApiErrorResponse> handleInvalidRoleAssignment(
-            InvalidRoleAssignmentException ex,
-            HttpServletRequest req
-    ) {
-        return build(
-                HttpStatus.BAD_REQUEST,
-                ex.getMessage(),
-                req,
-                null
-        );
-    }
-
-    @ExceptionHandler(SelfActionNotAllowedException.class)
-    public ResponseEntity<ApiErrorResponse> handleSelfActionNotAllowed(
-            SelfActionNotAllowedException ex,
-            HttpServletRequest req
-    ) {
-        return build(
-                HttpStatus.FORBIDDEN,
                 ex.getMessage(),
                 req,
                 null
@@ -126,6 +83,51 @@ public class GlobalExceptionHandler {
     ) {
         return build(
                 HttpStatus.NOT_FOUND,
+                ex.getMessage(),
+                req,
+                null
+        );
+    }
+
+    @ExceptionHandler({
+            RoleNotFoundException.class,
+            PermissionNotFoundException.class
+    })
+    public ResponseEntity<ApiErrorResponse> handleAdminNotFound(
+            RuntimeException ex,
+            HttpServletRequest req
+    ) {
+        return build(
+                HttpStatus.NOT_FOUND,
+                ex.getMessage(),
+                req,
+                null
+        );
+    }
+
+    @ExceptionHandler(PermissionCodeAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handlePermissionCodeConflict(
+            PermissionCodeAlreadyExistsException ex,
+            HttpServletRequest req
+    ) {
+        return build(
+                HttpStatus.CONFLICT,
+                ex.getMessage(),
+                req,
+                null
+        );
+    }
+
+    @ExceptionHandler({
+            InvalidRoleAssignmentException.class,
+            SelfActionNotAllowedException.class
+    })
+    public ResponseEntity<ApiErrorResponse> handleAdminBadRequest(
+            RuntimeException ex,
+            HttpServletRequest req
+    ) {
+        return build(
+                HttpStatus.BAD_REQUEST,
                 ex.getMessage(),
                 req,
                 null

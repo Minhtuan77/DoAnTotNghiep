@@ -6,10 +6,14 @@ import com.datn.backend.service.AdminRoleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+// "/api/admin/**" đã bị giới hạn ROLE_ADMIN ở SecurityConfig (lớp phòng
+// thủ 1); @PreAuthorize dưới đây là lớp phòng thủ 2 theo permission chi
+// tiết (ROLE_READ / ROLE_UPDATE), xem giải thích ở AdminUserController.
 @RestController
 @RequestMapping("/api/admin/roles")
 @RequiredArgsConstructor
@@ -18,6 +22,7 @@ public class AdminRoleController {
     private final AdminRoleService adminRoleService;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_READ')")
     public ResponseEntity<List<RoleResponse>> listRoles() {
 
         return ResponseEntity.ok(
@@ -26,6 +31,7 @@ public class AdminRoleController {
     }
 
     @GetMapping("/{roleId}")
+    @PreAuthorize("hasAuthority('ROLE_READ')")
     public ResponseEntity<RoleResponse> getRole(
             @PathVariable Integer roleId
     ) {
@@ -36,6 +42,7 @@ public class AdminRoleController {
     }
 
     @PostMapping("/{roleId}/permissions")
+    @PreAuthorize("hasAuthority('ROLE_UPDATE')")
     public ResponseEntity<RoleResponse> assignPermissions(
             @PathVariable Integer roleId,
 
@@ -51,6 +58,7 @@ public class AdminRoleController {
     }
 
     @DeleteMapping("/{roleId}/permissions/{permissionId}")
+    @PreAuthorize("hasAuthority('ROLE_UPDATE')")
     public ResponseEntity<RoleResponse> removePermission(
             @PathVariable Integer roleId,
 

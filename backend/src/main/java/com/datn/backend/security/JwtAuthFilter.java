@@ -74,6 +74,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         userDetailsService
                                 .loadUserByUsername(email);
 
+                // Trạng thái tài khoản luôn được lấy MỚI từ DB ở mỗi request
+                // (không đọc từ claim trong JWT), nhưng userDetails ở trên chỉ
+                // mới được TẢI, chưa được KIỂM TRA. Nếu bỏ qua bước dưới đây,
+                // một tài khoản vừa bị Admin khóa (LOCKED/UNVERIFIED) vẫn có
+                // thể tiếp tục gọi API bình thường cho tới khi access token
+                // hết hạn (tối đa 15 phút), vì access token là JWT stateless,
+                // không tra cứu session đã bị revoke trong DB.
+                if (!userDetails.isEnabled()
+                        || !userDetails.isAccountNonLocked()) {
+
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
                 if (jwtUtil.isTokenValid(
                         token,
                         userDetails.getUsername()

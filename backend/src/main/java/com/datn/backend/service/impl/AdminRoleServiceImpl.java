@@ -61,7 +61,9 @@ public class AdminRoleServiceImpl implements AdminRoleService {
             CreatePermissionRequest request
     ) {
 
-        String code = request.getPermissionCode().trim();
+        String code = request.getPermissionCode()
+        .trim()
+        .toUpperCase();
 
         if (permissionRepository.existsByPermissionCode(code)) {
             throw new PermissionCodeAlreadyExistsException(code);

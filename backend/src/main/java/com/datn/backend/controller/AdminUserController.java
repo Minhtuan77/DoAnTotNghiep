@@ -15,20 +15,27 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
-// Toàn bộ "/api/admin/**" đã được giới hạn chỉ ROLE_ADMIN mới gọi được,
-// xem SecurityConfig.securityFilterChain() - không cần thêm @PreAuthorize
-// ở từng method nữa.
+// Lớp phòng thủ 1: "/api/admin/**" đã được giới hạn chỉ ROLE_ADMIN mới
+// gọi được, xem SecurityConfig.securityFilterChain().
+// Lớp phòng thủ 2: @PreAuthorize theo permission chi tiết dưới đây - hiện
+// tại ADMIN luôn có đủ mọi permission nên 2 lớp này trùng kết quả, nhưng
+// permission-based check là điểm mở rộng cho sau này (vd: role MODERATOR
+// chỉ có USER_READ mà không có USER_UPDATE, không cần sửa SecurityConfig).
 @RestController
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
 public class AdminUserController {
 
     private final AdminUserService adminUserService;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('USER_READ')")
     public ResponseEntity<PageResponse<UserResponse>> listUsers(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String roleCode,
@@ -55,6 +62,7 @@ public class AdminUserController {
     }
 
     @GetMapping("/{userId}")
+    @PreAuthorize("hasAuthority('USER_READ')")
     public ResponseEntity<UserResponse> getUserById(
             @PathVariable Long userId
     ) {
@@ -65,6 +73,7 @@ public class AdminUserController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('USER_UPDATE')")
     public ResponseEntity<UserResponse> createStaffOrAdmin(
             @Valid @RequestBody CreateStaffRequest request
     ) {
@@ -77,6 +86,7 @@ public class AdminUserController {
     }
 
     @PatchMapping("/{userId}/status")
+    @PreAuthorize("hasAuthority('USER_UPDATE')")
     public ResponseEntity<UserResponse> updateUserStatus(
             @PathVariable Long userId,
 
@@ -95,6 +105,7 @@ public class AdminUserController {
     }
 
     @PatchMapping("/{userId}/role")
+    @PreAuthorize("hasAuthority('USER_UPDATE')")
     public ResponseEntity<UserResponse> updateUserRole(
             @PathVariable Long userId,
 

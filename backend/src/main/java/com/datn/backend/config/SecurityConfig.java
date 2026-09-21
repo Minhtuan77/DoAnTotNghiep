@@ -67,10 +67,18 @@ public class SecurityConfig {
                                         "/v3/api-docs/**"
                                 ).permitAll()
 
-                                // API Admin
+                                // API Admin: mở cổng thô cho cả ADMIN
+                                // và STAFF (STAFF có permission USER_READ,
+                                // INVENTORY_* theo DataInitializer). Việc
+                                // phân quyền chi tiết theo từng endpoint
+                                // (vd USER_UPDATE) do @PreAuthorize trên
+                                // từng controller method đảm nhiệm.
                                 .requestMatchers(
                                         "/api/admin/**"
-                                ).hasRole("ADMIN")
+                                ).hasAnyRole(
+                                        "ADMIN",
+                                        "STAFF"
+                                )
 
                                 // API Staff
                                 .requestMatchers(
