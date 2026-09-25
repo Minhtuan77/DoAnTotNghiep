@@ -19,35 +19,95 @@ public class BrandController {
 
     private final BrandService brandService;
 
+
+    // =========================================================
+    // PUBLIC APIs
+    // =========================================================
+
+    /**
+     * Lấy danh sách thương hiệu.
+     * Guest cũng có thể truy cập.
+     */
     @GetMapping
     public ResponseEntity<List<BrandResponse>> getAllBrands() {
-        return ResponseEntity.ok(brandService.getAllBrands());
+
+        return ResponseEntity.ok(
+                brandService.getAllBrands()
+        );
     }
 
+
+    /**
+     * Lấy chi tiết thương hiệu.
+     * Guest cũng có thể truy cập.
+     */
     @GetMapping("/{id}")
-    public ResponseEntity<BrandResponse> getBrandById(@PathVariable Long id) {
-        return ResponseEntity.ok(brandService.getBrandById(id));
+    public ResponseEntity<BrandResponse> getBrandById(
+            @PathVariable Long id
+    ) {
+
+        return ResponseEntity.ok(
+                brandService.getBrandById(id)
+        );
     }
 
+
+    // =========================================================
+    // MANAGEMENT APIs
+    // =========================================================
+
+    /**
+     * Tạo thương hiệu.
+     *
+     * Yêu cầu permission BRAND_CREATE.
+     */
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
-    public ResponseEntity<BrandResponse> createBrand(@Valid @RequestBody BrandRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(brandService.createBrand(request));
+    @PreAuthorize("hasAuthority('BRAND_CREATE')")
+    public ResponseEntity<BrandResponse> createBrand(
+            @Valid @RequestBody BrandRequest request
+    ) {
+
+        BrandResponse response =
+                brandService.createBrand(request);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 
+
+    /**
+     * Cập nhật thương hiệu.
+     *
+     * Yêu cầu permission BRAND_UPDATE.
+     */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    @PreAuthorize("hasAuthority('BRAND_UPDATE')")
     public ResponseEntity<BrandResponse> updateBrand(
             @PathVariable Long id,
             @Valid @RequestBody BrandRequest request
     ) {
-        return ResponseEntity.ok(brandService.updateBrand(id, request));
+
+        return ResponseEntity.ok(
+                brandService.updateBrand(id, request)
+        );
     }
 
+
+    /**
+     * Xóa thương hiệu.
+     *
+     * Chỉ user có BRAND_DELETE mới được thực hiện.
+     * Hiện tại permission này được cấp cho ADMIN.
+     */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteBrand(@PathVariable Long id) {
+    @PreAuthorize("hasAuthority('BRAND_DELETE')")
+    public ResponseEntity<Void> deleteBrand(
+            @PathVariable Long id
+    ) {
+
         brandService.deleteBrand(id);
+
         return ResponseEntity.noContent().build();
     }
 }

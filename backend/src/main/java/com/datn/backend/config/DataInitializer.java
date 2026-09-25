@@ -17,8 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
-    // Tài khoản admin mặc định (chỉ được tạo nếu DB chưa có admin nào).
-    // BẮT BUỘC đổi mật khẩu này ngay sau lần đăng nhập đầu tiên khi deploy thật.
     private static final String DEFAULT_ADMIN_EMAIL = "admin@datn.com";
     private static final String DEFAULT_ADMIN_PASSWORD = "Admin@123";
 
@@ -27,142 +25,255 @@ public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // @Transactional bắt buộc phải có ở đây: từ lần chạy thứ 2 trở đi,
-    // findByRoleCode() trả về Role đã tồn tại trong DB, khi đó
-    // role.getPermissions() là lazy collection của Hibernate. Gọi .add()
-    // lên nó ngoài phạm vi 1 transaction/session sẽ ném
-    // LazyInitializationException và làm ứng dụng crash lúc khởi động.
     @Override
     @Transactional
     public void run(String... args) {
 
-        // =========================
-        // 1. Tạo Permission
-        // =========================
-        // Danh sách permission dưới đây khớp với bảng RBAC thiết kế cho
-        // CUSTOMER / STAFF / ADMIN. ORDER_* và INVENTORY_* được seed sẵn dù
-        // Module Order/Inventory chưa code, để khi làm tới module đó chỉ cần
-        // gắn @PreAuthorize mà không phải sửa lại DataInitializer.
-        //
-        // Ghi chú: bảng thiết kế không có USER_CREATE / ROLE_CREATE /
-        // PERMISSION_CREATE riêng -> hành động "tạo" ở 3 nhóm tài nguyên này
-        // dùng chung permission *_UPDATE (xem AdminUserController,
-        // AdminRoleController, AdminPermissionController).
+        // =====================================================
+        // 1. PRODUCT PERMISSIONS
+        // =====================================================
 
         Permission productRead =
                 createPermission("PRODUCT_READ", "Xem sản phẩm");
+
         Permission productCreate =
                 createPermission("PRODUCT_CREATE", "Tạo sản phẩm");
+
         Permission productUpdate =
                 createPermission("PRODUCT_UPDATE", "Cập nhật sản phẩm");
+
         Permission productDelete =
                 createPermission("PRODUCT_DELETE", "Xóa sản phẩm");
 
+
+        // =====================================================
+        // 2. CATEGORY PERMISSIONS
+        // =====================================================
+
+        Permission categoryRead =
+                createPermission("CATEGORY_READ", "Xem danh mục");
+
+        Permission categoryCreate =
+                createPermission("CATEGORY_CREATE", "Tạo danh mục");
+
+        Permission categoryUpdate =
+                createPermission("CATEGORY_UPDATE", "Cập nhật danh mục");
+
+        Permission categoryDelete =
+                createPermission("CATEGORY_DELETE", "Xóa danh mục");
+
+
+        // =====================================================
+        // 3. BRAND PERMISSIONS
+        // =====================================================
+
+        Permission brandRead =
+                createPermission("BRAND_READ", "Xem thương hiệu");
+
+        Permission brandCreate =
+                createPermission("BRAND_CREATE", "Tạo thương hiệu");
+
+        Permission brandUpdate =
+                createPermission("BRAND_UPDATE", "Cập nhật thương hiệu");
+
+        Permission brandDelete =
+                createPermission("BRAND_DELETE", "Xóa thương hiệu");
+
+
+        // =====================================================
+        // 4. ORDER PERMISSIONS
+        // =====================================================
+
         Permission orderRead =
                 createPermission("ORDER_READ", "Xem đơn hàng");
+
         Permission orderUpdate =
                 createPermission("ORDER_UPDATE", "Cập nhật đơn hàng");
+
         Permission orderDelete =
                 createPermission("ORDER_DELETE", "Xóa/hủy đơn hàng");
 
+
+        // =====================================================
+        // 5. USER PERMISSIONS
+        // =====================================================
+
         Permission userRead =
                 createPermission("USER_READ", "Xem người dùng");
+
         Permission userUpdate =
                 createPermission("USER_UPDATE", "Cập nhật người dùng");
+
         Permission userDelete =
                 createPermission("USER_DELETE", "Xóa người dùng");
 
+
+        // =====================================================
+        // 6. ROLE PERMISSIONS
+        // =====================================================
+
         Permission roleRead =
                 createPermission("ROLE_READ", "Xem role");
+
         Permission roleUpdate =
                 createPermission("ROLE_UPDATE", "Cập nhật role/gán quyền");
 
+
+        // =====================================================
+        // 7. PERMISSION MANAGEMENT
+        // =====================================================
+
         Permission permissionRead =
                 createPermission("PERMISSION_READ", "Xem permission");
+
         Permission permissionUpdate =
-                createPermission("PERMISSION_UPDATE", "Tạo/cập nhật permission");
+                createPermission(
+                        "PERMISSION_UPDATE",
+                        "Tạo/cập nhật permission"
+                );
+
+
+        // =====================================================
+        // 8. INVENTORY PERMISSIONS
+        // =====================================================
 
         Permission inventoryRead =
                 createPermission("INVENTORY_READ", "Xem tồn kho");
+
         Permission inventoryUpdate =
                 createPermission("INVENTORY_UPDATE", "Cập nhật tồn kho");
 
 
-        // =========================
-        // 2. Tạo Role
-        // =========================
+        // =====================================================
+        // 9. CREATE ROLES
+        // =====================================================
 
-        Role admin = createRole("ADMIN", "Quản trị viên");
-        Role staff = createRole("STAFF", "Nhân viên");
-        Role customer = createRole("CUSTOMER", "Khách hàng");
+        Role admin =
+                createRole("ADMIN", "Quản trị viên");
+
+        Role staff =
+                createRole("STAFF", "Nhân viên");
+
+        Role customer =
+                createRole("CUSTOMER", "Khách hàng");
 
 
-        // =========================
-        // 3. Mapping ADMIN - toàn quyền
-        // =========================
+        // =====================================================
+        // 10. ADMIN - TOÀN QUYỀN
+        // =====================================================
 
+        // Product
         admin.getPermissions().add(productRead);
         admin.getPermissions().add(productCreate);
         admin.getPermissions().add(productUpdate);
         admin.getPermissions().add(productDelete);
 
+        // Category
+        admin.getPermissions().add(categoryRead);
+        admin.getPermissions().add(categoryCreate);
+        admin.getPermissions().add(categoryUpdate);
+        admin.getPermissions().add(categoryDelete);
+
+        // Brand
+        admin.getPermissions().add(brandRead);
+        admin.getPermissions().add(brandCreate);
+        admin.getPermissions().add(brandUpdate);
+        admin.getPermissions().add(brandDelete);
+
+        // Order
         admin.getPermissions().add(orderRead);
         admin.getPermissions().add(orderUpdate);
         admin.getPermissions().add(orderDelete);
 
+        // User
         admin.getPermissions().add(userRead);
         admin.getPermissions().add(userUpdate);
         admin.getPermissions().add(userDelete);
 
+        // Role
         admin.getPermissions().add(roleRead);
         admin.getPermissions().add(roleUpdate);
 
+        // Permission
         admin.getPermissions().add(permissionRead);
         admin.getPermissions().add(permissionUpdate);
 
+        // Inventory
         admin.getPermissions().add(inventoryRead);
         admin.getPermissions().add(inventoryUpdate);
 
 
-        // =========================
-        // 4. Mapping STAFF - vận hành, không quản trị hệ thống
-        // =========================
+        // =====================================================
+        // 11. STAFF - QUẢN LÝ VẬN HÀNH
+        // =====================================================
 
+        // Product
         staff.getPermissions().add(productRead);
+        staff.getPermissions().add(productCreate);
         staff.getPermissions().add(productUpdate);
 
+        // Category
+        staff.getPermissions().add(categoryRead);
+        staff.getPermissions().add(categoryCreate);
+        staff.getPermissions().add(categoryUpdate);
+
+        // Brand
+        staff.getPermissions().add(brandRead);
+        staff.getPermissions().add(brandCreate);
+        staff.getPermissions().add(brandUpdate);
+
+        // Order
         staff.getPermissions().add(orderRead);
         staff.getPermissions().add(orderUpdate);
 
+        // User
         staff.getPermissions().add(userRead);
 
+        // Inventory
         staff.getPermissions().add(inventoryRead);
         staff.getPermissions().add(inventoryUpdate);
 
 
-        // =========================
-        // 5. Mapping CUSTOMER
-        // =========================
-        // Các hành động của khách hàng (xem sản phẩm, đặt hàng, đánh giá...)
-        // là API công khai/theo quyền sở hữu dữ liệu của chính họ, không cần
-        // permission code riêng - không gán permission nào ở đây.
+        // =====================================================
+        // 12. CUSTOMER
+        // =====================================================
+        /*
+         * CUSTOMER không cần permission quản trị.
+         *
+         * Các API như:
+         * - xem sản phẩm
+         * - xem category
+         * - xem brand
+         *
+         * được permitAll trong SecurityConfig.
+         *
+         * Các chức năng Cart / Order / Wishlist / Review sau này
+         * sẽ kiểm tra quyền sở hữu dữ liệu của chính user.
+         */
 
 
-        // =========================
-        // 6. Save
-        // =========================
+        // =====================================================
+        // 13. SAVE ROLES
+        // =====================================================
 
         admin = roleRepository.save(admin);
+
         roleRepository.save(staff);
+
         roleRepository.save(customer);
 
 
-        // =========================
-        // 7. Seed tài khoản Admin mặc định
-        // =========================
+        // =====================================================
+        // 14. CREATE DEFAULT ADMIN
+        // =====================================================
+
         seedDefaultAdmin(admin);
     }
 
+
+    // =========================================================
+    // DEFAULT ADMIN
+    // =========================================================
 
     private void seedDefaultAdmin(Role adminRole) {
 
@@ -196,6 +307,10 @@ public class DataInitializer implements CommandLineRunner {
     }
 
 
+    // =========================================================
+    // CREATE PERMISSION
+    // =========================================================
+
     private Permission createPermission(
             String code,
             String description
@@ -213,6 +328,10 @@ public class DataInitializer implements CommandLineRunner {
                 );
     }
 
+
+    // =========================================================
+    // CREATE ROLE
+    // =========================================================
 
     private Role createRole(
             String code,

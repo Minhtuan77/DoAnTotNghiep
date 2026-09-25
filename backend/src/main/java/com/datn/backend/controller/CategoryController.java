@@ -19,35 +19,95 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
+
+    // =========================================================
+    // PUBLIC APIs
+    // =========================================================
+
+    /**
+     * Lấy danh sách danh mục.
+     * Guest cũng có thể truy cập.
+     */
     @GetMapping
     public ResponseEntity<List<CategoryResponse>> getAllCategories() {
-        return ResponseEntity.ok(categoryService.getAllCategories());
+
+        return ResponseEntity.ok(
+                categoryService.getAllCategories()
+        );
     }
 
+
+    /**
+     * Lấy chi tiết danh mục.
+     * Guest cũng có thể truy cập.
+     */
     @GetMapping("/{id}")
-    public ResponseEntity<CategoryResponse> getCategoryById(@PathVariable Long id) {
-        return ResponseEntity.ok(categoryService.getCategoryById(id));
+    public ResponseEntity<CategoryResponse> getCategoryById(
+            @PathVariable Long id
+    ) {
+
+        return ResponseEntity.ok(
+                categoryService.getCategoryById(id)
+        );
     }
 
+
+    // =========================================================
+    // MANAGEMENT APIs
+    // =========================================================
+
+    /**
+     * Tạo danh mục.
+     *
+     * Yêu cầu permission CATEGORY_CREATE.
+     */
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
-    public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.createCategory(request));
+    @PreAuthorize("hasAuthority('CATEGORY_CREATE')")
+    public ResponseEntity<CategoryResponse> createCategory(
+            @Valid @RequestBody CategoryRequest request
+    ) {
+
+        CategoryResponse response =
+                categoryService.createCategory(request);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 
+
+    /**
+     * Cập nhật danh mục.
+     *
+     * Yêu cầu permission CATEGORY_UPDATE.
+     */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    @PreAuthorize("hasAuthority('CATEGORY_UPDATE')")
     public ResponseEntity<CategoryResponse> updateCategory(
             @PathVariable Long id,
             @Valid @RequestBody CategoryRequest request
     ) {
-        return ResponseEntity.ok(categoryService.updateCategory(id, request));
+
+        return ResponseEntity.ok(
+                categoryService.updateCategory(id, request)
+        );
     }
 
+
+    /**
+     * Xóa danh mục.
+     *
+     * Chỉ user có CATEGORY_DELETE mới được thực hiện.
+     * Hiện tại permission này được cấp cho ADMIN.
+     */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
+    @PreAuthorize("hasAuthority('CATEGORY_DELETE')")
+    public ResponseEntity<Void> deleteCategory(
+            @PathVariable Long id
+    ) {
+
         categoryService.deleteCategory(id);
+
         return ResponseEntity.noContent().build();
     }
 }
