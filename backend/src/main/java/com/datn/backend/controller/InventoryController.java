@@ -13,6 +13,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.datn.backend.security.CustomUserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -27,7 +29,7 @@ public class InventoryController {
     // =========================================================
 
     @GetMapping("/product/{productId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    @PreAuthorize("hasAuthority('INVENTORY_READ')")
     public ResponseEntity<ApiResponse<InventoryResponse>>
     getInventoryByProductId(
             @PathVariable Long productId
@@ -51,7 +53,7 @@ public class InventoryController {
     // =========================================================
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    @PreAuthorize("hasAuthority('INVENTORY_READ')")
     public ResponseEntity<ApiResponse<Page<InventoryResponse>>>
     getAllInventories(
             @RequestParam(defaultValue = "0")
@@ -82,7 +84,7 @@ public class InventoryController {
     // =========================================================
 
     @GetMapping("/low-stock")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    @PreAuthorize("hasAuthority('INVENTORY_READ')")
     public ResponseEntity<ApiResponse<Page<InventoryResponse>>>
     getLowStockInventories(
             @RequestParam(defaultValue = "0")
@@ -113,14 +115,17 @@ public class InventoryController {
     // =========================================================
 
     @PostMapping("/product/{productId}/adjust")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    @PreAuthorize("hasAuthority('INVENTORY_UPDATE')")
     public ResponseEntity<ApiResponse<InventoryResponse>>
     adjustStock(
             @PathVariable Long productId,
 
             @Valid
             @RequestBody
-            InventoryAdjustmentRequest request
+            InventoryAdjustmentRequest request,
+
+            @AuthenticationPrincipal
+            CustomUserDetails userDetails
     ) {
 
         /*
@@ -131,13 +136,9 @@ public class InventoryController {
          */
         request.setProductId(productId);
 
-        /*
-         * Tạm thời để null.
-         *
-         * Khi kết nối CustomUserDetails/JWT,
-         * thay bằng ID user hiện tại.
-         */
-        Long currentUserId = null;
+        Long currentUserId = userDetails != null
+                ? userDetails.getUserId()
+                : null;
 
         InventoryResponse response =
                 inventoryService.adjustStock(
@@ -158,7 +159,7 @@ public class InventoryController {
     // =========================================================
 
     @GetMapping("/product/{productId}/transactions")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    @PreAuthorize("hasAuthority('INVENTORY_READ')")
     public ResponseEntity<
             ApiResponse<Page<InventoryTransactionResponse>>
             >
@@ -195,7 +196,7 @@ public class InventoryController {
     // =========================================================
 
     @GetMapping("/transactions")
-    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    @PreAuthorize("hasAuthority('INVENTORY_READ')")
     public ResponseEntity<
             ApiResponse<Page<InventoryTransactionResponse>>
             >

@@ -194,6 +194,63 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     // =========================================================
+    // INITIALIZE INVENTORY
+    // =========================================================
+
+    @Override
+    @Transactional
+    public void initializeInventory(
+            Long productId,
+            Integer quantity,
+            Long userId
+    ) {
+
+        if (productId == null) {
+            throw new IllegalArgumentException("Product ID không được để trống");
+        }
+
+        if (quantity == null || quantity < 0) {
+            throw new IllegalArgumentException("Số lượng tồn kho không được âm");
+        }
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy sản phẩm ID: " + productId));
+
+        if (inventoryRepository.findByProduct_ProductId(productId).isPresent()) {
+            throw new IllegalArgumentException(
+                    "Sản phẩm đã có thông tin tồn kho: " + productId);
+        }
+
+        Inventory inventory = Inventory.builder()
+                .product(product)
+                .productId(productId)
+                .quantityOnHand(quantity)
+                .quantityReserved(0)
+                .lowStockThreshold(5)
+                .build();
+
+        inventoryRepository.save(inventory);
+
+        if (quantity > 0) {
+            User user = userId != null
+                    ? userRepository.findById(userId).orElse(null)
+                    : null;
+
+            InventoryTransaction transaction = InventoryTransaction.builder()
+                    .product(product)
+                    .changeQty(quantity)
+                    .reason(InventoryReason.IMPORT)
+                    .referenceType("PRODUCT_CREATE")
+                    .referenceId(productId)
+                    .createdBy(user)
+                    .build();
+
+            transactionRepository.save(transaction);
+        }
+    }
+
+    // =========================================================
     // PROCESS ORDER STOCK
     // =========================================================
 
@@ -287,14 +344,24 @@ public class InventoryServiceImpl implements InventoryService {
         // Filter theo product
         // -----------------------------------------------------
 
-        if (productId != null) {
+        if (productId != null && reason != null) {
 
-            transactions =
-                    transactionRepository
-                            .findByProduct_ProductId(
-                                    productId,
-                                    pageable
-                            );
+            transactions = transactionRepository
+                    .findByProduct_ProductIdAndReason(
+                            productId,
+                            reason,
+                            pageable
+                    );
+        }
+
+        // -----------------------------------------------------
+        // Filter theo product
+        // -----------------------------------------------------
+
+        else if (productId != null) {
+
+            transactions = transactionRepository
+                    .findByProduct_ProductId(productId, pageable);
         }
 
         // -----------------------------------------------------

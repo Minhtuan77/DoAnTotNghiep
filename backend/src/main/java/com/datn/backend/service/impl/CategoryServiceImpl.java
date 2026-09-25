@@ -85,7 +85,7 @@ public class CategoryServiceImpl implements CategoryService {
         // Tạo category
         Category category = Category.builder()
                 .name(request.getName())
-                .slug(toSlug(request.getName()))
+                .slug(createUniqueSlug(toSlug(request.getName()), null))
                 .description(request.getDescription())
                 .parent(parent)
                 .build();
@@ -164,7 +164,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         // Cập nhật thông tin
         category.setName(request.getName());
-        category.setSlug(toSlug(request.getName()));
+        category.setSlug(createUniqueSlug(toSlug(request.getName()), categoryId));
         category.setDescription(request.getDescription());
         category.setParent(parent);
 
@@ -276,6 +276,32 @@ public class CategoryServiceImpl implements CategoryService {
                     "ID danh mục không hợp lệ: " + id
             );
         }
+    }
+
+    /**
+     * Tạo slug duy nhất cho category.
+     * currentId được bỏ qua khi update chính category đó.
+     */
+    private String createUniqueSlug(String baseSlug, Integer currentId) {
+
+        String slug = baseSlug;
+        int counter = 1;
+
+        while (categoryRepository.existsBySlug(slug)) {
+
+            Category existing = categoryRepository.findBySlug(slug).orElse(null);
+
+            if (existing != null
+                    && currentId != null
+                    && existing.getCategoryId().equals(currentId)) {
+                break;
+            }
+
+            slug = baseSlug + "-" + counter;
+            counter++;
+        }
+
+        return slug;
     }
 
     /**

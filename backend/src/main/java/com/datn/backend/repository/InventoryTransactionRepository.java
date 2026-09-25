@@ -13,4 +13,10 @@ public interface InventoryTransactionRepository extends JpaRepository<InventoryT
     Page<InventoryTransaction> findByProduct_ProductId(Long productId, Pageable pageable);
     
     Page<InventoryTransaction> findByReason(InventoryReason reason, Pageable pageable);
+
+    Page<InventoryTransaction> findByProduct_ProductIdAndReason(
+            Long productId,
+            InventoryReason reason,
+            Pageable pageable
+    );
 }

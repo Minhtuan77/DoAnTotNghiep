@@ -29,9 +29,11 @@ public class ProductRequest {
     @DecimalMin(value = "0.0", message = "Giá khuyến mãi phải lớn hơn hoặc bằng 0")
     private BigDecimal salePrice;
 
-    @NotNull(message = "Số lượng tồn kho không được để trống")
     @Min(value = 0, message = "Số lượng tồn kho không được âm")
     private Integer stockQuantity;
+
+    // Chỉ dùng khi TẠO sản phẩm để khởi tạo tồn kho.
+    // Khi UPDATE sản phẩm, tồn kho phải cập nhật qua Inventory API.
 
     @NotNull(message = "Danh mục không được để trống")
     private Integer categoryId;

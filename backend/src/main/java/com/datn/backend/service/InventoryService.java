@@ -33,6 +33,12 @@ public interface InventoryService {
     );
 
     /**
+     * Khởi tạo bản ghi tồn kho cho sản phẩm mới.
+     * Nếu quantity > 0 sẽ ghi thêm giao dịch IMPORT.
+     */
+    void initializeInventory(Long productId, Integer quantity, Long userId);
+
+    /**
      * Xử lý biến động tồn kho liên quan đến đơn hàng.
      */
     void processOrderStock(

@@ -67,6 +67,13 @@ public class SecurityConfig {
                                         "/v3/api-docs/**"
                                 ).permitAll()
 
+                                // Public product catalog: guest can browse/search.
+                                .requestMatchers(
+                                        "/api/v1/products/**",
+                                        "/api/v1/categories/**",
+                                        "/api/v1/brands/**"
+                                ).permitAll()
+
                                 // API Admin: mở cổng thô cho cả ADMIN
                                 // và STAFF (STAFF có permission USER_READ,
                                 // INVENTORY_* theo DataInitializer). Việc

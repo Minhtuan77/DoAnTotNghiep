@@ -16,7 +16,7 @@ public interface ProductService {
 
     ProductResponse getProductById(Long id);
     ProductResponse getProductBySlug(String slug);
-    ProductResponse createProduct(ProductRequest request);
+    ProductResponse createProduct(ProductRequest request, Long userId);
     ProductResponse updateProduct(Long id, ProductRequest request);
     void deleteProduct(Long id);
 }

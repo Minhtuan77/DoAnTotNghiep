@@ -21,6 +21,7 @@ import com.datn.backend.repository.CategoryRepository;
 import com.datn.backend.repository.InventoryRepository;
 import com.datn.backend.repository.ProductRepository;
 import com.datn.backend.service.ProductService;
+import com.datn.backend.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -48,6 +49,8 @@ public class ProductServiceImpl implements ProductService {
     private final BrandRepository brandRepository;
 
     private final InventoryRepository inventoryRepository;
+
+    private final InventoryService inventoryService;
 
     // =========================================================
     // GET ALL PRODUCTS
@@ -186,7 +189,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponse createProduct(
-            ProductRequest request
+            ProductRequest request,
+            Long userId
     ) {
 
         // -------------------------
@@ -311,23 +315,16 @@ public class ProductServiceImpl implements ProductService {
                 productRepository.save(product);
 
         // -------------------------
-        // Create Inventory
+        // Initialize Inventory
         // -------------------------
 
-        Inventory inventory =
-                Inventory.builder()
-                        .product(savedProduct)
-                        .productId(
-                                savedProduct.getProductId()
-                        )
-                        .quantityOnHand(
-                                request.getStockQuantity()
-                        )
-                        .quantityReserved(0)
-                        .lowStockThreshold(5)
-                        .build();
-
-        inventoryRepository.save(inventory);
+        inventoryService.initializeInventory(
+                savedProduct.getProductId(),
+                request.getStockQuantity() != null
+                        ? request.getStockQuantity()
+                        : 0,
+                userId
+        );
 
         // -------------------------
         // Return response
@@ -494,38 +491,11 @@ public class ProductServiceImpl implements ProductService {
         Product updatedProduct =
                 productRepository.save(product);
 
-        // -------------------------
-        // Update Inventory
-        // -------------------------
-
-        Inventory inventory =
-                inventoryRepository
-                        .findById(id)
-                        .orElse(null);
-
-        if (inventory == null) {
-
-            inventory =
-                    Inventory.builder()
-                            .product(updatedProduct)
-                            .productId(
-                                    updatedProduct.getProductId()
-                            )
-                            .quantityOnHand(
-                                    request.getStockQuantity()
-                            )
-                            .quantityReserved(0)
-                            .lowStockThreshold(5)
-                            .build();
-
-        } else {
-
-            inventory.setQuantityOnHand(
-                    request.getStockQuantity()
-            );
-        }
-
-        inventoryRepository.save(inventory);
+        // ---------------------------------------------------------
+        // KHÔNG cập nhật tồn kho tại đây.
+        // Tồn kho phải đi qua InventoryService để luôn tạo
+        // InventoryTransaction và giữ được lịch sử audit.
+        // ---------------------------------------------------------
 
         // -------------------------
         // Return response
