@@ -27,7 +27,26 @@ public class ProductController {
     public ResponseEntity<PageResponse<ProductResponse>> getAllProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "productId") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Long brandId,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice
+    ) {
+        return ResponseEntity.ok(productService.getAllProducts(
+                page, size, sortBy, sortDir, keyword, categoryId, brandId, minPrice, maxPrice, ProductStatus.ACTIVE
+        ));
+    }
+
+
+    @GetMapping("/management")
+    @PreAuthorize("hasAuthority('PRODUCT_READ')")
+    public ResponseEntity<PageResponse<ProductResponse>> getProductsForManagement(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "productId") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long categoryId,

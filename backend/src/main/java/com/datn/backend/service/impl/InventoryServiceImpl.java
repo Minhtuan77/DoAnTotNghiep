@@ -108,7 +108,7 @@ public class InventoryServiceImpl implements InventoryService {
         // -----------------------------------------------------
 
         Inventory inventory = inventoryRepository
-                .findByProduct_ProductId(request.getProductId())
+                .findByProductIdForUpdate(request.getProductId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Không tìm thấy thông tin kho cho sản phẩm ID: "

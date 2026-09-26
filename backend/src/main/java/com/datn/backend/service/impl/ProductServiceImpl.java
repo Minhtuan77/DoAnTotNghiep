@@ -150,7 +150,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse getProductById(Long id) {
 
         Product product =
-                productRepository.findById(id)
+                productRepository.findByProductIdAndStatus(id, ProductStatus.ACTIVE)
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Không tìm thấy sản phẩm với ID: "
@@ -172,7 +172,7 @@ public class ProductServiceImpl implements ProductService {
     ) {
 
         Product product =
-                productRepository.findBySlug(slug)
+                productRepository.findBySlugAndStatus(slug, ProductStatus.ACTIVE)
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Không tìm thấy sản phẩm với slug: "
@@ -520,15 +520,11 @@ public class ProductServiceImpl implements ProductService {
                                 )
                         );
 
-        // Inventory dùng product_id làm PK/FK
-        // nên xóa Inventory trước
-        if (inventoryRepository.existsById(id)) {
-            inventoryRepository.deleteById(id);
-        }
-
-        // ProductImage và ProductSpecification
-        // sẽ được xóa nhờ cascade + orphanRemoval
-        productRepository.delete(product);
+        // Không hard-delete sản phẩm vì sản phẩm có thể đã được tham chiếu
+        // bởi đơn hàng, tồn kho, đánh giá, wishlist, log hành vi...
+        // Chuyển sang DISCONTINUED để giữ toàn vẹn lịch sử/audit.
+        product.setStatus(ProductStatus.DISCONTINUED);
+        productRepository.save(product);
     }
 
     // =========================================================

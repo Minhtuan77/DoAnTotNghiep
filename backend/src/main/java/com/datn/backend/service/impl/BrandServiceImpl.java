@@ -5,6 +5,8 @@ import com.datn.backend.dto.response.BrandResponse;
 import com.datn.backend.entity.Brand;
 import com.datn.backend.exception.ResourceNotFoundException;
 import com.datn.backend.repository.BrandRepository;
+import com.datn.backend.repository.ProductRepository;
+import com.datn.backend.exception.BusinessException;
 import com.datn.backend.service.BrandService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
 public class BrandServiceImpl implements BrandService {
 
     private final BrandRepository brandRepository;
+    private final ProductRepository productRepository;
 
     /**
      * Lấy tất cả thương hiệu
@@ -128,6 +131,11 @@ public class BrandServiceImpl implements BrandService {
                         )
                 );
 
+        if (productRepository.existsByBrand_BrandId(brandId)) {
+            throw new BusinessException(
+                    "Không thể xóa thương hiệu đang được sản phẩm sử dụng. Hãy đổi thương hiệu của sản phẩm trước."
+            );
+        }
         brandRepository.delete(brand);
     }
 

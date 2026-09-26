@@ -5,6 +5,8 @@ import com.datn.backend.dto.response.CategoryResponse;
 import com.datn.backend.entity.Category;
 import com.datn.backend.exception.ResourceNotFoundException;
 import com.datn.backend.repository.CategoryRepository;
+import com.datn.backend.repository.ProductRepository;
+import com.datn.backend.exception.BusinessException;
 import com.datn.backend.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final ProductRepository productRepository;
 
     /**
      * Lấy tất cả danh mục
@@ -189,6 +192,16 @@ public class CategoryServiceImpl implements CategoryService {
                         )
                 );
 
+        if (productRepository.existsByCategory_CategoryId(categoryId)) {
+            throw new BusinessException(
+                    "Không thể xóa danh mục đang được sản phẩm sử dụng. Hãy chuyển sản phẩm sang danh mục khác trước."
+            );
+        }
+        if (categoryRepository.existsByParent_CategoryId(categoryId)) {
+            throw new BusinessException(
+                    "Không thể xóa danh mục đang có danh mục con. Hãy xử lý danh mục con trước."
+            );
+        }
         categoryRepository.delete(category);
     }
 
