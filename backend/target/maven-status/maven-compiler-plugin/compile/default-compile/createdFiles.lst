@@ -133,6 +133,7 @@ com\datn\backend\service\impl\AdminUserServiceImpl.class
 com\datn\backend\dto\request\CategoryRequest.class
 com\datn\backend\entity\CartItem.class
 com\datn\backend\exception\PermissionCodeAlreadyExistsException.class
+com\datn\backend\service\impl\PendingPaymentExpiryService.class
 com\datn\backend\dto\request\ResetPasswordRequest.class
 com\datn\backend\security\JwtAuthFilter.class
 com\datn\backend\dto\response\CartItemResponse$CartItemResponseBuilder.class
