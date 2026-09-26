@@ -145,6 +145,20 @@ public class DataInitializer implements CommandLineRunner {
 
 
         // =====================================================
+        // VOUCHER PERMISSIONS
+        // =====================================================
+
+        Permission voucherRead =
+                createPermission("VOUCHER_READ", "Xem voucher");
+
+        Permission voucherCreate =
+                createPermission("VOUCHER_CREATE", "Tạo voucher");
+
+        Permission voucherUpdate =
+                createPermission("VOUCHER_UPDATE", "Cập nhật/vô hiệu hóa voucher");
+
+
+        // =====================================================
         // 9. CREATE ROLES
         // =====================================================
 
@@ -201,6 +215,11 @@ public class DataInitializer implements CommandLineRunner {
         // Inventory
         admin.getPermissions().add(inventoryRead);
         admin.getPermissions().add(inventoryUpdate);
+
+        // Voucher
+        admin.getPermissions().add(voucherRead);
+        admin.getPermissions().add(voucherCreate);
+        admin.getPermissions().add(voucherUpdate);
 
 
         // =====================================================

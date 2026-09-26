@@ -154,4 +154,14 @@ public class Order {
     @Builder.Default
     private List<OrderStatusHistory> statusHistories =
             new ArrayList<>();
+
+    @OneToMany(
+            mappedBy = "order",
+            fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @Builder.Default
+    private List<PaymentTransaction> paymentTransactions = new ArrayList<>();
 }
+

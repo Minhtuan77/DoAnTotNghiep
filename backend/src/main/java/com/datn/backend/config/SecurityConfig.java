@@ -67,6 +67,13 @@ public class SecurityConfig {
                                         "/v3/api-docs/**"
                                 ).permitAll()
 
+                                // VNPAY callback: VNPAY server/browser phải gọi được không cần JWT.
+                                // Tính toàn vẹn được bảo vệ bằng HMAC-SHA512 trong VNPayService.
+                                .requestMatchers(
+                                        "/api/payments/vnpay/ipn",
+                                        "/api/payments/vnpay/return"
+                                ).permitAll()
+
                                 // Public product catalog: guest can browse/search.
                                 .requestMatchers(
                                         "/api/v1/products/**",

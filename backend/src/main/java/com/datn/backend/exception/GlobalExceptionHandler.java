@@ -134,6 +134,19 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ApiErrorResponse> handleBusiness(
+            BusinessException ex,
+            HttpServletRequest req
+    ) {
+        return build(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                req,
+                null
+        );
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiErrorResponse> handleAccessDenied(
             AccessDeniedException ex,
