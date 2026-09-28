@@ -157,6 +157,15 @@ public class DataInitializer implements CommandLineRunner {
         Permission voucherUpdate =
                 createPermission("VOUCHER_UPDATE", "Cập nhật/vô hiệu hóa voucher");
 
+        // =====================================================
+        // REVIEW PERMISSIONS
+        // =====================================================
+        Permission reviewRead =
+                createPermission("REVIEW_READ", "Xem/quản lý đánh giá");
+
+        Permission reviewUpdate =
+                createPermission("REVIEW_UPDATE", "Ẩn/hiện đánh giá");
+
 
         // =====================================================
         // 9. CREATE ROLES
@@ -221,6 +230,10 @@ public class DataInitializer implements CommandLineRunner {
         admin.getPermissions().add(voucherCreate);
         admin.getPermissions().add(voucherUpdate);
 
+        // Review moderation
+        admin.getPermissions().add(reviewRead);
+        admin.getPermissions().add(reviewUpdate);
+
 
         // =====================================================
         // 11. STAFF - QUẢN LÝ VẬN HÀNH
@@ -251,6 +264,10 @@ public class DataInitializer implements CommandLineRunner {
         // Inventory
         staff.getPermissions().add(inventoryRead);
         staff.getPermissions().add(inventoryUpdate);
+
+        // Review moderation
+        staff.getPermissions().add(reviewRead);
+        staff.getPermissions().add(reviewUpdate);
 
 
         // =====================================================

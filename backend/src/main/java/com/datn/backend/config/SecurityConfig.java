@@ -5,6 +5,7 @@ import com.datn.backend.security.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -72,6 +73,12 @@ public class SecurityConfig {
                                 .requestMatchers(
                                         "/api/payments/vnpay/ipn",
                                         "/api/payments/vnpay/return"
+                                ).permitAll()
+
+                                // Public review: guest có thể xem đánh giá VISIBLE của sản phẩm.
+                                .requestMatchers(
+                                        HttpMethod.GET,
+                                        "/api/reviews/product/**"
                                 ).permitAll()
 
                                 // Public product catalog: guest can browse/search.
