@@ -9,6 +9,7 @@ import com.datn.backend.exception.BusinessException;
 import com.datn.backend.exception.ResourceNotFoundException;
 import com.datn.backend.repository.*;
 import com.datn.backend.service.OrderService;
+import com.datn.backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +35,7 @@ public class OrderServiceImpl implements OrderService {
     private final VoucherRepository voucherRepository;
     private final VoucherUsageRepository voucherUsageRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -121,6 +123,14 @@ public class OrderServiceImpl implements OrderService {
                         : "Khách hàng tạo đơn hàng").build();
         order.getStatusHistories().add(createdHistory);
         historyRepository.save(createdHistory);
+
+        notificationService.create(
+                user,
+                request.getPaymentMethod() == PaymentMethod.ONLINE ? "Đơn hàng chờ thanh toán" : "Đặt hàng thành công",
+                request.getPaymentMethod() == PaymentMethod.ONLINE
+                        ? "Đơn " + order.getOrderCode() + " đã được tạo. Vui lòng hoàn tất thanh toán VNPAY."
+                        : "Đơn " + order.getOrderCode() + " đã được tạo và đang chờ xác nhận.",
+                NotificationType.ORDER, "ORDER", order.getOrderId());
 
         // Trừ kho + ghi audit trong cùng transaction.
         for (OrderItem item : order.getItems()) {
@@ -225,6 +235,22 @@ public class OrderServiceImpl implements OrderService {
         historyRepository.save(OrderStatusHistory.builder().order(order)
                 .fromStatus(old == null ? null : old.name()).toStatus(target.name())
                 .changedBy(actor).note(note).build());
+        notificationService.create(order.getUser(), "Cập nhật đơn hàng",
+                orderStatusMessage(order, target), NotificationType.ORDER, "ORDER", order.getOrderId());
+    }
+
+    private String orderStatusMessage(Order order, OrderStatus status) {
+        String code = order.getOrderCode();
+        return switch (status) {
+            case PENDING_PAYMENT -> "Đơn " + code + " đang chờ thanh toán.";
+            case PENDING_CONFIRMATION -> "Đơn " + code + " đang chờ xác nhận.";
+            case CONFIRMED -> "Đơn " + code + " đã được xác nhận.";
+            case SHIPPING -> "Đơn " + code + " đang được giao.";
+            case DELIVERED -> "Đơn " + code + " đã được giao. Vui lòng kiểm tra sản phẩm.";
+            case COMPLETED -> "Đơn " + code + " đã hoàn thành. Bạn có thể đánh giá sản phẩm đã mua.";
+            case CANCELLED -> "Đơn " + code + " đã bị hủy.";
+            case RETURNED -> "Đơn " + code + " đã được chuyển sang trạng thái trả hàng.";
+        };
     }
 
     private boolean isAllowedTransition(OrderStatus from, OrderStatus to) {

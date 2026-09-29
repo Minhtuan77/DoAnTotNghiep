@@ -9,11 +9,13 @@ import com.datn.backend.entity.PaymentTransaction;
 import com.datn.backend.entity.enums.OrderStatus;
 import com.datn.backend.entity.enums.PaymentMethod;
 import com.datn.backend.entity.enums.PaymentTransactionStatus;
+import com.datn.backend.entity.enums.NotificationType;
 import com.datn.backend.exception.BusinessException;
 import com.datn.backend.repository.OrderRepository;
 import com.datn.backend.repository.OrderStatusHistoryRepository;
 import com.datn.backend.repository.PaymentTransactionRepository;
 import com.datn.backend.service.VNPayService;
+import com.datn.backend.service.NotificationService;
 import com.datn.backend.util.VNPayUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,6 +43,7 @@ public class VNPayServiceImpl implements VNPayService {
     private final PaymentTransactionRepository paymentRepository;
     private final OrderStatusHistoryRepository historyRepository;
     private final ObjectMapper objectMapper;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -148,6 +151,9 @@ public class VNPayServiceImpl implements VNPayService {
                             .changedBy(null)
                             .note("VNPAY xác nhận thanh toán thành công")
                             .build());
+                    notificationService.create(order.getUser(), "Thanh toán thành công",
+                            "Thanh toán VNPAY cho đơn " + order.getOrderCode() + " thành công. Đơn hàng đang chờ xác nhận.",
+                            NotificationType.ORDER, "ORDER", order.getOrderId());
                 }
             }
 

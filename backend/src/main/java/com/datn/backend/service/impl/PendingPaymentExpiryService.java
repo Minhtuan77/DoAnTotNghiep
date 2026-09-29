@@ -3,9 +3,11 @@ package com.datn.backend.service.impl;
 import com.datn.backend.config.VNPayConfig;
 import com.datn.backend.entity.*;
 import com.datn.backend.entity.enums.InventoryReason;
+import com.datn.backend.entity.enums.NotificationType;
 import com.datn.backend.entity.enums.OrderStatus;
 import com.datn.backend.entity.enums.PaymentTransactionStatus;
 import com.datn.backend.repository.*;
+import com.datn.backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,7 @@ public class PendingPaymentExpiryService {
     private final InventoryTransactionRepository inventoryTransactionRepository;
     private final VoucherRepository voucherRepository;
     private final VoucherUsageRepository voucherUsageRepository;
+    private final NotificationService notificationService;
 
     @Scheduled(fixedDelayString = "${order.pending-payment-expiry-check-ms:60000}")
     @Transactional
@@ -70,6 +73,9 @@ public class PendingPaymentExpiryService {
         historyRepository.save(OrderStatusHistory.builder()
                 .order(order).fromStatus(old.name()).toStatus(OrderStatus.CANCELLED.name())
                 .changedBy(null).note("Hệ thống tự hủy do hết thời gian thanh toán VNPAY").build());
+        notificationService.create(order.getUser(), "Đơn hàng đã tự hủy",
+                "Đơn " + order.getOrderCode() + " đã bị hủy do quá thời gian thanh toán VNPAY.",
+                NotificationType.ORDER, "ORDER", order.getOrderId());
 
         for (OrderItem item : order.getItems()) {
             Inventory inv = inventoryRepository.findByProductIdForUpdate(item.getProduct().getProductId()).orElse(null);
