@@ -1,0 +1,50 @@
+# ==============================
+# Node / Next.js
+# ==============================
+node_modules/
+**/node_modules/
+
+.next/
+**/.next/
+
+# ==============================
+# Environment
+# ==============================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+**/.env
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+
+# Cho phép commit file mẫu
+!.env.example
+!**/.env.example
+
+# ==============================
+# Backend Maven
+# ==============================
+target/
+**/target/
+
+# ==============================
+# Logs
+# ==============================
+*.log
+
+# ==============================
+# IDE
+# ==============================
+.idea/
+.vscode/
+
+# ==============================
+# OS
+# ==============================
+.DS_Store
+Thumbs.db
