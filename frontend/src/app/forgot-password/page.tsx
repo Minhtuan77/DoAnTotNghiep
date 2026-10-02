@@ -1,2 +1,1 @@
-import StitchScreen from "@/components/StitchScreen";
-export default function Page(){return <StitchScreen screen="reset-password" title="GiaDụngViệt"/>}
+'use client';import {useState} from 'react';import {api} from '@/lib/api';export default function Forgot(){const[e,setE]=useState(''),[m,setM]=useState('');return <div className="authWrap"><h1>Quên mật khẩu</h1><form className="form" onSubmit={async x=>{x.preventDefault();try{await api.forgot(e);setM('Yêu cầu khôi phục mật khẩu đã được gửi.')}catch(z:any){setM(z.message)}}}><label>Email<input className="input" type="email" required value={e} onChange={x=>setE(x.target.value)}/></label><button className="primary">Gửi yêu cầu</button>{m&&<p>{m}</p>}</form></div>}

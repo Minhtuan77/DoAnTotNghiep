@@ -1,0 +1,16 @@
+export type Page<T>={content:T[];page?:number;number?:number;size:number;totalElements:number;totalPages:number;last?:boolean};
+export type ApiEnvelope<T>={success:boolean;message:string;data:T;timestamp?:string};
+export type Category={id:number;name:string;slug:string;description?:string;parentId?:number|null};
+export type Brand={id:number;name:string;slug?:string;description?:string;logoUrl?:string};
+export type ProductImage={id?:number;imageId?:number;imageUrl:string;isPrimary?:boolean;sortOrder?:number};
+export type Spec={id?:number;specName:string;specValue:string;sortOrder?:number};
+export type Product={id:number;sku?:string;name:string;slug:string;description?:string;price:number;salePrice?:number|null;stockQuantity:number;ratingAverage:number;reviewCount:number;status:string;category?:Category;brand?:Brand;images?:ProductImage[];specifications?:Spec[];createdAt?:string};
+export type CartItem={cartItemId:number;productId:number;sku:string;productName:string;imageUrl?:string;originalPrice:number;unitPrice:number;quantity:number;availableQuantity:number;lineTotal:number};
+export type Cart={cartId:number;userId:number;items:CartItem[];totalItems:number;subtotal:number;shippingFee:number;voucherCode?:string;discount:number;totalAmount:number};
+export type OrderItem={orderItemId:number;productId:number;productName:string;unitPrice:number;quantity:number;lineSubtotal:number};
+export type Order={orderId:number;orderCode:string;userId:number;recipientName:string;recipientPhone:string;shippingAddress:string;note?:string;paymentMethod:string;status:string;subtotalAmount:number;shippingFee:number;discountAmount:number;totalAmount:number;voucherId?:number;voucherCode?:string;items:OrderItem[];statusHistories?:{historyId:number;fromStatus?:string;toStatus:string;note?:string;changedAt:string}[];payments?:unknown[];createdAt:string;updatedAt:string};
+export type User={userId:number;fullName:string;email:string;phone?:string;avatarUrl?:string;roleCode:string;roleName:string;status:string;createdAt:string};
+export type Address={addressId:number;recipientName:string;phone:string;province?:string;district?:string;ward?:string;detailAddress:string;isDefault:boolean};
+export type Wishlist={wishlistId:number;productId:number;productName:string;slug:string;price:number;salePrice?:number;primaryImageUrl?:string;averageRating:number;reviewCount:number;addedAt:string};
+export type Review={reviewId:number;productId:number;productName:string;orderItemId:number;userId:number;userName:string;userAvatarUrl?:string;rating:number;comment:string;status:string;createdAt:string};
+export type Inventory={productId:number;productName:string;productSku:string;quantityOnHand:number;quantityReserved:number;availableQuantity:number;lowStockThreshold:number;isLowStock:boolean;updatedAt:string};

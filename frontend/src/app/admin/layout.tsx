@@ -1,0 +1,4 @@
+'use client';
+import Link from 'next/link';import {usePathname} from 'next/navigation';import {Icon} from '@/components/UI';
+const items=[['/admin','Tổng quan','grid'],['/admin/products','Sản phẩm','package'],['/admin/categories','Danh mục & thương hiệu','category'],['/admin/orders','Đơn hàng','orders'],['/admin/inventory','Tồn kho','inventory'],['/admin/vouchers','Voucher','voucher'],['/admin/reviews','Đánh giá','review'],['/admin/users','Người dùng','users']] as const;
+export default function AdminLayout({children}:{children:React.ReactNode}){const path=usePathname();return <div className="container adminLayout"><aside className="sideMenu adminNav"><div className="adminNavTitle">TRUNG TÂM QUẢN TRỊ</div>{items.map(([href,label,icon])=><Link key={href} className={path===href?'active':''} href={href}><Icon name={icon}/>{label}</Link>)}</aside><div>{children}</div></div>}
