@@ -9,7 +9,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    @EntityGraph(attributePaths = {"items", "items.product", "statusHistories", "statusHistories.changedBy", "voucher"})
+    // Chỉ fetch một collection (items) để tránh Hibernate MultipleBagFetchException.
+    // statusHistories được load lazy bên trong transaction của OrderService.
+    @EntityGraph(attributePaths = {"items", "items.product", "voucher"})
     Optional<Order> findDetailedByOrderId(Long orderId);
 
     Page<Order> findByUser_UserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);

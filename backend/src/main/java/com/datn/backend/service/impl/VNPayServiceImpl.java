@@ -164,12 +164,20 @@ public class VNPayServiceImpl implements VNPayService {
     }
 
     @Override
+    @Transactional
     public VNPayReturnResponse processReturn(Map<String, String> params) {
         validateConfig();
         boolean signatureValid = VNPayUtil.verifySignature(params, config.getHashSecret());
         boolean successful = signatureValid
                 && "00".equals(params.get("vnp_ResponseCode"))
                 && "00".equals(params.get("vnp_TransactionStatus"));
+
+        // IPN vẫn là luồng chính. Tuy nhiên khi chạy local/demo, VNPay không thể gọi
+        // vào localhost qua IPN. Với browser return đã xác thực chữ ký, đồng bộ
+        // giao dịch thành công theo cách idempotent để đơn không bị kẹt PENDING_PAYMENT.
+        if (successful) {
+            synchronizeSuccessfulReturn(params);
+        }
 
         return VNPayReturnResponse.builder()
                 .signatureValid(signatureValid)
@@ -182,6 +190,44 @@ public class VNPayServiceImpl implements VNPayService {
                         : successful ? "Thanh toán thành công"
                         : "Thanh toán không thành công")
                 .build();
+    }
+
+    private void synchronizeSuccessfulReturn(Map<String, String> params) {
+        Long paymentId;
+        try {
+            paymentId = Long.valueOf(params.get("vnp_TxnRef"));
+        } catch (Exception e) {
+            return;
+        }
+
+        PaymentTransaction payment = paymentRepository.findByIdForUpdate(paymentId).orElse(null);
+        if (payment == null || !"VNPAY".equalsIgnoreCase(payment.getProvider())) return;
+        if (!toVnpAmount(payment.getAmount()).equals(params.get("vnp_Amount"))) return;
+
+        if (payment.getStatus() == PaymentTransactionStatus.PENDING) {
+            payment.setProviderTxnCode(params.get("vnp_TransactionNo"));
+            payment.setRawResponse(toJson(params));
+            payment.setStatus(PaymentTransactionStatus.SUCCESS);
+            payment.setPaidAt(LocalDateTime.now(VN_ZONE));
+            paymentRepository.save(payment);
+        }
+
+        Order order = payment.getOrder();
+        if (order.getStatus() == OrderStatus.PENDING_PAYMENT) {
+            OrderStatus old = order.getStatus();
+            order.setStatus(OrderStatus.PENDING_CONFIRMATION);
+            orderRepository.save(order);
+            historyRepository.save(OrderStatusHistory.builder()
+                    .order(order)
+                    .fromStatus(old.name())
+                    .toStatus(OrderStatus.PENDING_CONFIRMATION.name())
+                    .changedBy(null)
+                    .note("VNPAY xác nhận thanh toán thành công qua return callback")
+                    .build());
+            notificationService.create(order.getUser(), "Thanh toán thành công",
+                    "Thanh toán VNPAY cho đơn " + order.getOrderCode() + " thành công. Đơn hàng đang chờ xác nhận.",
+                    NotificationType.ORDER, "ORDER", order.getOrderId());
+        }
     }
 
     private String toVnpAmount(BigDecimal amount) {
