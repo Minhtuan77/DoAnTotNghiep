@@ -2,6 +2,10 @@
 
 import Link from 'next/link';
 import {useSearchParams} from 'next/navigation';
+import {useEffect,useState} from 'react';
+import {api} from '@/lib/api';
+import type {Product} from '@/lib/types';
+import {ProductCard} from '@/components/UI';
 
 export default function PaymentResult(){
  const s=useSearchParams();
@@ -11,6 +15,8 @@ export default function PaymentResult(){
  const transactionNo=s.get('transactionNo')||s.get('vnp_TransactionNo')||'';
  const txnRef=s.get('txnRef')||s.get('vnp_TxnRef')||'';
  const ok=success||(!s.has('success')&&code==='00');
+ const [rec,setRec]=useState<Product[]>([]);
+ useEffect(()=>{if(ok)api.recommendations('POST_ORDER',undefined,4).then((r:any)=>setRec(r.products||[])).catch(()=>{})},[ok]);
 
  return <main className="paymentResultPage">
    <section className={`paymentResultCard ${ok?'paymentResultSuccess':'paymentResultFailed'}`}>
@@ -35,6 +41,6 @@ export default function PaymentResult(){
        <Link className="primary" href="/orders">Xem đơn hàng</Link>
        <Link className="secondary" href="/products">Tiếp tục mua sắm</Link>
      </div>
-   </section>
+   </section>{ok&&rec.length>0&&<section className="container recommendSection" style={{width:'100%'}}><div className="sectionHead"><div><span className="recommendTag">AI GỢI Ý</span><h2>Có thể bạn sẽ cần tiếp</h2></div></div><div className="grid productsGrid">{rec.map(x=><ProductCard key={x.id} p={x}/>)}</div></section>}
  </main>;
 }

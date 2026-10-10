@@ -10,6 +10,7 @@ import com.datn.backend.exception.ResourceNotFoundException;
 import com.datn.backend.repository.*;
 import com.datn.backend.service.OrderService;
 import com.datn.backend.service.NotificationService;
+import com.datn.backend.service.BehaviorLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +37,8 @@ public class OrderServiceImpl implements OrderService {
     private final VoucherUsageRepository voucherUsageRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final BehaviorLogService behaviorLogService;
+    private final ProductRepository productRepository;
 
     @Override
     @Transactional
@@ -222,8 +225,14 @@ public class OrderServiceImpl implements OrderService {
             cancelPendingPayments(order);
         } else if (target == OrderStatus.RETURNED) {
             restoreStock(order, InventoryReason.ORDER_RETURNED, actor);
-        } else if (target == OrderStatus.COMPLETED && order.getPaymentMethod() == PaymentMethod.COD) {
-            markCodPaid(order);
+        } else if (target == OrderStatus.COMPLETED) {
+            if (order.getPaymentMethod() == PaymentMethod.COD) markCodPaid(order);
+            for (OrderItem item : order.getItems()) {
+                Product product = item.getProduct();
+                product.setSoldCount((product.getSoldCount() == null ? 0 : product.getSoldCount()) + item.getQuantity());
+                productRepository.save(product);
+                behaviorLogService.record(order.getUser().getUserId(), null, product.getProductId(), BehaviorActionType.PURCHASE, null, "{\"orderId\":" + order.getOrderId() + ",\"quantity\":" + item.getQuantity() + "}");
+            }
         }
         return toResponse(order);
     }

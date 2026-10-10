@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface ProductRepository
@@ -26,4 +27,6 @@ public interface ProductRepository
     boolean existsByName(String name);
 
     boolean existsBySku(String sku);
+
+    List<Product> findByStatus(ProductStatus status);
 }

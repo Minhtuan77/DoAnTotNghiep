@@ -13,6 +13,8 @@ import com.datn.backend.repository.ProductRepository;
 import com.datn.backend.repository.UserRepository;
 import com.datn.backend.repository.WishlistRepository;
 import com.datn.backend.service.WishlistService;
+import com.datn.backend.service.BehaviorLogService;
+import com.datn.backend.entity.enums.BehaviorActionType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,7 @@ public class WishlistServiceImpl implements WishlistService {
     private final WishlistRepository wishlistRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final BehaviorLogService behaviorLogService;
 
     @Override
     @Transactional
@@ -39,6 +42,7 @@ public class WishlistServiceImpl implements WishlistService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
         Wishlist wishlist = wishlistRepository.save(Wishlist.builder().user(user).product(product).build());
+        behaviorLogService.record(userId, null, productId, BehaviorActionType.FAVORITE, null, null);
         return toResponse(wishlist);
     }
 

@@ -10,6 +10,8 @@ import com.datn.backend.exception.BusinessException;
 import com.datn.backend.exception.ResourceNotFoundException;
 import com.datn.backend.repository.*;
 import com.datn.backend.service.CartService;
+import com.datn.backend.service.BehaviorLogService;
+import com.datn.backend.entity.enums.BehaviorActionType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +29,7 @@ public class CartServiceImpl implements CartService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
+    private final BehaviorLogService behaviorLogService;
 
     @Override
     @Transactional
@@ -56,6 +59,7 @@ public class CartServiceImpl implements CartService {
             item.setQuantity(newQuantity);
         }
         cartRepository.save(cart);
+        behaviorLogService.record(userId, null, product.getProductId(), BehaviorActionType.ADD_TO_CART, null, "{\"quantity\":" + request.getQuantity() + "}");
         return toResponse(cart);
     }
 

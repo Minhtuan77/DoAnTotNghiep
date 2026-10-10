@@ -81,11 +81,14 @@ public class SecurityConfig {
                                         "/api/reviews/product/**"
                                 ).permitAll()
 
-                                // Public product catalog: guest can browse/search.
+                                // Public product catalog + AI assistant/recommendations for guest users.
                                 .requestMatchers(
                                         "/api/v1/products/**",
                                         "/api/v1/categories/**",
-                                        "/api/v1/brands/**"
+                                        "/api/v1/brands/**",
+                                        "/api/behavior/**",
+                                        "/api/recommendations/**",
+                                        "/api/chat/**"
                                 ).permitAll()
 
                                 // API Admin: mở cổng thô cho cả ADMIN

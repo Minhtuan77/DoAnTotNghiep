@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
+import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
     // Chỉ fetch một collection (items) để tránh Hibernate MultipleBagFetchException.
@@ -17,4 +18,5 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Page<Order> findByUser_UserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
     Optional<Order> findByOrderIdAndUser_UserId(Long orderId, Long userId);
     boolean existsByOrderCode(String orderCode);
+    List<Order> findTop10ByUser_UserIdOrderByCreatedAtDesc(Long userId);
 }

@@ -11,6 +11,8 @@ import com.datn.backend.exception.BusinessException;
 import com.datn.backend.exception.ResourceNotFoundException;
 import com.datn.backend.repository.*;
 import com.datn.backend.service.ReviewService;
+import com.datn.backend.service.BehaviorLogService;
+import com.datn.backend.entity.enums.BehaviorActionType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final ReviewRepository reviewRepository;
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
+    private final BehaviorLogService behaviorLogService;
 
     @Override
     @Transactional
@@ -49,6 +52,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .build();
         review = reviewRepository.save(review);
         refreshProductRating(item.getProduct().getProductId());
+        behaviorLogService.record(userId, null, item.getProduct().getProductId(), BehaviorActionType.REVIEW, null, "{\"rating\":" + request.getRating() + "}");
         return toResponse(review);
     }
 

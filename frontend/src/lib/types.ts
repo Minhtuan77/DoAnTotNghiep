@@ -14,3 +14,7 @@ export type Address={addressId:number;recipientName:string;phone:string;province
 export type Wishlist={wishlistId:number;productId:number;productName:string;slug:string;price:number;salePrice?:number;primaryImageUrl?:string;averageRating:number;reviewCount:number;addedAt:string};
 export type Review={reviewId:number;productId:number;productName:string;orderItemId:number;userId:number;userName:string;userAvatarUrl?:string;rating:number;comment:string;status:string;createdAt:string};
 export type Inventory={productId:number;productName:string;productSku:string;quantityOnHand:number;quantityReserved:number;availableQuantity:number;lowStockThreshold:number;isLowStock:boolean;updatedAt:string};
+
+export type Recommendation={placement:string;strategy:string;products:Product[]};
+export type ChatMessage={messageId?:number;senderType:'CUSTOMER'|'BOT'|'STAFF';messageText:string;createdAt?:string};
+export type ChatResponse={conversationId:number;status:string;reply:ChatMessage};

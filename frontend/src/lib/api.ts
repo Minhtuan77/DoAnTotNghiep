@@ -3,8 +3,9 @@ const BASE=process.env.NEXT_PUBLIC_API_URL||'http://localhost:8080/api';
 export function getToken(){return typeof window==='undefined'?null:localStorage.getItem('accessToken')}
 export function getStoredUser(){if(typeof window==='undefined')return null;try{return JSON.parse(localStorage.getItem('user')||'null')}catch{return null}}
 export function isLoggedIn(){return !!getToken()}
+export function getBehaviorSessionId(){if(typeof window==='undefined')return 'ssr';let id=localStorage.getItem('behaviorSessionId');if(!id){id=(globalThis.crypto?.randomUUID?.()||`guest-${Date.now()}-${Math.random().toString(16).slice(2)}`);localStorage.setItem('behaviorSessionId',id)}return id}
 export async function request<T>(path:string,init:RequestInit={}):Promise<T>{
- const h=new Headers(init.headers); const token=getToken(); if(token)h.set('Authorization',`Bearer ${token}`); if(init.body&&!h.has('Content-Type'))h.set('Content-Type','application/json');
+ const h=new Headers(init.headers); const token=getToken(); if(token)h.set('Authorization',`Bearer ${token}`); if(typeof window!=='undefined'&&!h.has('X-Session-Id'))h.set('X-Session-Id',getBehaviorSessionId()); if(init.body&&!h.has('Content-Type'))h.set('Content-Type','application/json');
  const r=await fetch(`${BASE}${path}`,{...init,headers:h,cache:'no-store'});
  if(!r.ok){let m=`Lỗi ${r.status}`;try{const e=await r.json();m=e.message||e.error||m}catch{} if(r.status===401&&typeof window!=='undefined'){localStorage.removeItem('accessToken');localStorage.removeItem('refreshToken');localStorage.removeItem('user')} throw new Error(m)}
  if(r.status===204)return undefined as T; return r.json();
@@ -12,6 +13,9 @@ export async function request<T>(path:string,init:RequestInit={}):Promise<T>{
 export function unwrap<T>(v:T|ApiEnvelope<T>):T{return v&&typeof v==='object'&&'data' in (v as object)?(v as ApiEnvelope<T>).data:v as T}
 export const api={
  products:(qs='')=>request(`/v1/products${qs}`), product:(id:number|string)=>request(`/v1/products/${id}`), categories:()=>request('/v1/categories'), brands:()=>request('/v1/brands'),
+ recommendations:(placement:string,anchorProductId?:number,limit=8)=>{const q=new URLSearchParams({placement,limit:String(limit)});if(anchorProductId)q.set('anchorProductId',String(anchorProductId));return request(`/recommendations?${q}`).then(unwrap)},
+ logBehavior:(body:Record<string,unknown>)=>request('/behavior',{method:'POST',body:JSON.stringify({...body,sessionId:getBehaviorSessionId()})}).then(unwrap),
+ chat:(body:unknown)=>request('/chat/messages',{method:'POST',body:JSON.stringify(body)}).then(unwrap), chatConversation:(id:number)=>request(`/chat/conversations/${id}`).then(unwrap), closeChat:(id:number)=>request(`/chat/conversations/${id}/close`,{method:'PATCH'}).then(unwrap),
  cart:()=>request('/cart').then(unwrap), addCart:(productId:number,quantity=1)=>request('/cart/items',{method:'POST',body:JSON.stringify({productId,quantity})}).then(unwrap), updateCart:(id:number,quantity:number)=>request(`/cart/items/${id}`,{method:'PUT',body:JSON.stringify({quantity})}).then(unwrap), removeCart:(id:number)=>request(`/cart/items/${id}`,{method:'DELETE'}).then(unwrap), clearCart:()=>request('/cart',{method:'DELETE'}),
  wishlist:()=>request('/wishlist').then(unwrap), wishAdd:(id:number)=>request(`/wishlist/${id}`,{method:'POST'}).then(unwrap), wishRemove:(id:number)=>request(`/wishlist/${id}`,{method:'DELETE'}).then(unwrap), wishCheck:(id:number)=>request(`/wishlist/${id}/check`).then(unwrap),
  orders:()=>request('/orders?size=100'), order:(id:number)=>request(`/orders/${id}`), createOrder:(body:unknown)=>request('/orders',{method:'POST',body:JSON.stringify(body)}), cancelOrder:(id:number)=>request(`/orders/${id}/cancel`,{method:'PATCH'}),

@@ -5,6 +5,8 @@ import com.datn.backend.dto.response.PageResponse;
 import com.datn.backend.dto.response.ProductResponse;
 import com.datn.backend.entity.enums.ProductStatus;
 import com.datn.backend.service.ProductService;
+import com.datn.backend.service.BehaviorLogService;
+import com.datn.backend.entity.enums.BehaviorActionType;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,6 +24,7 @@ import java.math.BigDecimal;
 public class ProductController {
 
     private final ProductService productService;
+    private final BehaviorLogService behaviorLogService;
 
     @GetMapping
     public ResponseEntity<PageResponse<ProductResponse>> getAllProducts(
@@ -33,8 +36,13 @@ public class ProductController {
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) Long brandId,
             @RequestParam(required = false) BigDecimal minPrice,
-            @RequestParam(required = false) BigDecimal maxPrice
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestHeader(value = "X-Session-Id", required = false) String sessionId
     ) {
+        if (keyword != null && !keyword.isBlank()) {
+            behaviorLogService.record(userDetails == null ? null : userDetails.getUserId(), sessionId, null, BehaviorActionType.SEARCH, keyword, null);
+        }
         return ResponseEntity.ok(productService.getAllProducts(
                 page, size, sortBy, sortDir, keyword, categoryId, brandId, minPrice, maxPrice, ProductStatus.ACTIVE
         ));
@@ -61,8 +69,12 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
-        return ResponseEntity.ok(productService.getProductById(id));
+    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestHeader(value = "X-Session-Id", required = false) String sessionId) {
+        ProductResponse response = productService.getProductById(id);
+        behaviorLogService.record(userDetails == null ? null : userDetails.getUserId(), sessionId, id, BehaviorActionType.VIEW, null, null);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/slug/{slug}")
