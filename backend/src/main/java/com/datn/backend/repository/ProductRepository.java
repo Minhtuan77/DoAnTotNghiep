@@ -4,6 +4,9 @@ import com.datn.backend.entity.Product;
 import com.datn.backend.entity.enums.ProductStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -29,4 +32,14 @@ public interface ProductRepository
     boolean existsBySku(String sku);
 
     List<Product> findByStatus(ProductStatus status);
+
+    long countByStatus(ProductStatus status);
+
+    /**
+     * Tăng lượt xem theo một câu UPDATE duy nhất để tránh read-modify-save và
+     * hạn chế lost update khi nhiều người mở cùng một sản phẩm đồng thời.
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update Product p set p.viewCount = coalesce(p.viewCount, 0) + 1 where p.productId = :productId")
+    int incrementViewCount(@Param("productId") Long productId);
 }

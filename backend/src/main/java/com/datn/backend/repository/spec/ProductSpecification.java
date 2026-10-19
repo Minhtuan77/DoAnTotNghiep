@@ -11,6 +11,9 @@ import java.util.List;
 
 public class ProductSpecification {
 
+    private ProductSpecification() {
+    }
+
     public static Specification<Product> filterProducts(
             String keyword,
             Long categoryId,
@@ -20,83 +23,74 @@ public class ProductSpecification {
             ProductStatus status
     ) {
         return (root, query, criteriaBuilder) -> {
-
             List<Predicate> predicates = new ArrayList<>();
 
-            // Tìm kiếm theo tên hoặc mô tả
-            if (keyword != null && !keyword.trim().isEmpty()) {
-
-                String searchPattern =
-                        "%" + keyword.trim().toLowerCase() + "%";
+            /*
+             * MySQL's normal utf8mb4 *_ci collations are case-insensitive, so using
+             * LIKE directly is sufficient for the product search. More importantly,
+             * avoiding lower()/upper() here prevents Hibernate 6 function-argument
+             * validation problems when an existing DB column has a text/LOB JDBC type.
+             * This is especially relevant for projects whose schema has evolved via
+             * ddl-auto=update.
+             */
+            if (keyword != null && !keyword.isBlank()) {
+                String searchPattern = "%" + escapeLike(keyword.trim()) + "%";
 
                 Predicate nameLike = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("name")),
-                        searchPattern
+                        root.get("name").as(String.class),
+                        searchPattern,
+                        '\\'
                 );
 
-                Predicate descLike = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("description")),
-                        searchPattern
+                Predicate skuLike = criteriaBuilder.like(
+                        root.get("sku").as(String.class),
+                        searchPattern,
+                        '\\'
                 );
 
-                predicates.add(
-                        criteriaBuilder.or(nameLike, descLike)
+                Predicate shortDescLike = criteriaBuilder.like(
+                        root.get("shortDesc").as(String.class),
+                        searchPattern,
+                        '\\'
                 );
+
+                predicates.add(criteriaBuilder.or(nameLike, skuLike, shortDescLike));
             }
 
-            // Lọc category
             if (categoryId != null) {
-                predicates.add(
-                        criteriaBuilder.equal(
-                                root.get("category").get("categoryId"),
-                                categoryId.intValue()
-                        )
-                );
+                predicates.add(criteriaBuilder.equal(
+                        root.get("category").get("categoryId"),
+                        categoryId.intValue()
+                ));
             }
 
-            // Lọc brand
             if (brandId != null) {
-                predicates.add(
-                        criteriaBuilder.equal(
-                                root.get("brand").get("brandId"),
-                                brandId.intValue()
-                        )
-                );
+                predicates.add(criteriaBuilder.equal(
+                        root.get("brand").get("brandId"),
+                        brandId.intValue()
+                ));
             }
 
-            // Giá tối thiểu
             if (minPrice != null) {
-                predicates.add(
-                        criteriaBuilder.greaterThanOrEqualTo(
-                                root.get("price"),
-                                minPrice
-                        )
-                );
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("price"), minPrice));
             }
 
-            // Giá tối đa
             if (maxPrice != null) {
-                predicates.add(
-                        criteriaBuilder.lessThanOrEqualTo(
-                                root.get("price"),
-                                maxPrice
-                        )
-                );
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("price"), maxPrice));
             }
 
-            // Trạng thái
             if (status != null) {
-                predicates.add(
-                        criteriaBuilder.equal(
-                                root.get("status"),
-                                status
-                        )
-                );
+                predicates.add(criteriaBuilder.equal(root.get("status"), status));
             }
 
-            return criteriaBuilder.and(
-                    predicates.toArray(new Predicate[0])
-            );
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    private static String escapeLike(String value) {
+        return value
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
     }
 }

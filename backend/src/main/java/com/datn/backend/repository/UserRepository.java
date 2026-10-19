@@ -22,4 +22,6 @@ public interface UserRepository
     boolean existsByEmail(String email);
 
     boolean existsByPhone(String phone);
+
+    long countByRole_RoleCode(String roleCode);
 }

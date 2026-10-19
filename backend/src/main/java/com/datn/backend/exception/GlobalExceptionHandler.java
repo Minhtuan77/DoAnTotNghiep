@@ -3,6 +3,7 @@ package com.datn.backend.exception;
 
 import com.datn.backend.dto.response.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -184,6 +186,7 @@ public class GlobalExceptionHandler {
             Exception ex,
             HttpServletRequest req
     ) {
+        log.error("Unhandled exception on {} {}", req.getMethod(), req.getRequestURI(), ex);
         return build(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "Đã có lỗi xảy ra ở hệ thống, vui lòng thử lại sau",

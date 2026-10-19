@@ -9,6 +9,7 @@ import com.datn.backend.service.BehaviorLogService;
 import com.datn.backend.entity.enums.BehaviorActionType;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,6 +22,7 @@ import java.math.BigDecimal;
 @RestController
 @RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
+@Slf4j
 public class ProductController {
 
     private final ProductService productService;
@@ -41,7 +43,21 @@ public class ProductController {
             @RequestHeader(value = "X-Session-Id", required = false) String sessionId
     ) {
         if (keyword != null && !keyword.isBlank()) {
-            behaviorLogService.record(userDetails == null ? null : userDetails.getUserId(), sessionId, null, BehaviorActionType.SEARCH, keyword, null);
+            // Behavior tracking is auxiliary analytics. A logging/schema problem must
+            // never make the core product-search API fail with HTTP 500.
+            try {
+                behaviorLogService.record(
+                        userDetails == null ? null : userDetails.getUserId(),
+                        sessionId,
+                        null,
+                        BehaviorActionType.SEARCH,
+                        keyword,
+                        null
+                );
+            } catch (Exception ex) {
+                log.warn("Không thể ghi nhận hành vi SEARCH cho keyword='{}': {}",
+                        keyword, ex.getMessage());
+            }
         }
         return ResponseEntity.ok(productService.getAllProducts(
                 page, size, sortBy, sortDir, keyword, categoryId, brandId, minPrice, maxPrice, ProductStatus.ACTIVE
@@ -73,7 +89,23 @@ public class ProductController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestHeader(value = "X-Session-Id", required = false) String sessionId) {
         ProductResponse response = productService.getProductById(id);
-        behaviorLogService.record(userDetails == null ? null : userDetails.getUserId(), sessionId, id, BehaviorActionType.VIEW, null, null);
+
+        // Tracking VIEW chỉ là analytics phụ trợ. Nếu việc ghi hành vi hoặc tăng
+        // view_count gặp lỗi thì vẫn phải trả chi tiết sản phẩm bình thường.
+        try {
+            behaviorLogService.record(
+                    userDetails == null ? null : userDetails.getUserId(),
+                    sessionId,
+                    id,
+                    BehaviorActionType.VIEW,
+                    null,
+                    null
+            );
+        } catch (Exception ex) {
+            log.warn("Không thể ghi nhận hành vi VIEW cho productId={}: {}",
+                    id, ex.getMessage(), ex);
+        }
+
         return ResponseEntity.ok(response);
     }
 

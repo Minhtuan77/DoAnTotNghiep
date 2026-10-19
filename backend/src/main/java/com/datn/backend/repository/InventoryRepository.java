@@ -28,4 +28,7 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
      */
     @Query("SELECT i FROM Inventory i WHERE i.quantityOnHand <= i.lowStockThreshold")
     Page<Inventory> findLowStockProducts(Pageable pageable);
+
+    @Query("SELECT COUNT(i) FROM Inventory i WHERE i.quantityOnHand <= i.lowStockThreshold")
+    long countLowStockProducts();
 }

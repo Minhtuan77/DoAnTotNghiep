@@ -28,8 +28,7 @@ public class BehaviorLogServiceImpl implements BehaviorLogService {
                 .user(user).sessionId(sid).product(product).actionType(actionType)
                 .searchKeyword(keyword).metadata(metadata).build());
         if (product != null && actionType == BehaviorActionType.VIEW) {
-            product.setViewCount((product.getViewCount() == null ? 0 : product.getViewCount()) + 1);
-            productRepository.save(product);
+            productRepository.incrementViewCount(product.getProductId());
         }
     }
 
